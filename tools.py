@@ -9,7 +9,8 @@ from urllib.parse import quote_plus
 def check_signs(window: int) -> int:
 
     if all(x > 0 for x in window):
-        return -1  
+        return -1
+        pass
     elif all(x < 0 for x in window):
         return 1  
     else:
