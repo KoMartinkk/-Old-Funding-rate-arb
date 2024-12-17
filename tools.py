@@ -5,12 +5,15 @@ import math
 from urllib.parse import quote_plus
 
 """"""""
+
+def martin():
+    print("martin")
+
 # rolling function to check if consecutive days in window are +ve/-ve
 def check_signs(window: int) -> int:
 
     if all(x > 0 for x in window):
         return -1
-        pass
     elif all(x < 0 for x in window):
         return 1  
     else:
