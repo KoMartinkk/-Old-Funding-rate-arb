@@ -6,9 +6,6 @@ from urllib.parse import quote_plus
 
 """"""""
 
-def martin():
-    print("martin")
-
 # rolling function to check if consecutive days in window are +ve/-ve
 def check_signs(window: int) -> int:
 
