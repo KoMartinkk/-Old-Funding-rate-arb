@@ -5,6 +5,13 @@ import math
 from urllib.parse import quote_plus
 
 """"""""
+perp_names = [
+    "WIF", "KAS", "1000BONK", "1000PEPE", "POPCAT", "FXS", "C98", "AR", 
+    "INJ", "1000SATS", "FIL", "RVN", "APT", "DYDX", "LDO", "ANKR", 
+    "RUNE", "1000LUNC", "NEAR", "GMX", "EGLD", "KAVA", "ARB", "FLOKI", 
+    "CAKE", "ONE"
+]
+
 
 # rolling function to check if consecutive days in window are +ve/-ve
 def check_signs(window: int) -> int:
