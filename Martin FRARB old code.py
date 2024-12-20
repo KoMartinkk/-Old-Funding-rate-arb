@@ -3,7 +3,7 @@ import time
 import pandas as pd
 import numpy as np
 import datetime
-from Fetcher_fundingrateBybit import bybit_fundrate_fetcher
+from BybitFundingR_fetcher import bybit_fundrate_fetcher
 import os
 from pprint import pprint
 import requests

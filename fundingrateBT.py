@@ -1,4 +1,5 @@
-import ccxt
+from pybit.unified_trading import HTTP
+from pybit.exceptions import InvalidRequestError
 import time
 import pandas as pd
 import numpy as np
@@ -9,13 +10,12 @@ from pprint import pprint
 import requests
 from typing import Optional
 
-exchange = ccxt.bybit({
-    'apiKey': 'tGnj6inSl01LwTWnZ8',  
-    'secret': 'qgQdKexzvAkzYxlastwA0FAQP3Rqi4aYL16X',
-    'options': {
-        'adjustForTimeDifference': True,
-    }
-})
+# arbitrage account
+session = HTTP(
+    api_key="ktDiLh7gzoyUw3nbdf",
+    api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
+)
+
 
 #rolling z-score model
 

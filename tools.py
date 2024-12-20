@@ -12,7 +12,6 @@ perp_names = [
     "CAKE", "ONE"
 ]
 
-
 # rolling function to check if consecutive days in window are +ve/-ve
 def check_signs(window: int) -> int:
 

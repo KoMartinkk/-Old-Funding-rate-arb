@@ -1,5 +1,6 @@
 import pandas as pd
 from datetime import datetime
+from tools import datetime_to_unix_converter, unix_to_datetime_converter
 
 def bybit_fundrate_fetcher(token: str, start: str, end: str) -> pd.DataFrame:
 
