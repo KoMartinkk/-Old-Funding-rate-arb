@@ -95,6 +95,11 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     return pd.Series([window, sharpe, calmar, annual_return, mdd],index= ['window', 'sharpe', 'calmar', 'annual_return', 'mdd'])
 
 
+#testing (type error here, possibly some problem with a column when fetching data, unexpected data type existed)
+df=bybit_fundrate_fetcher('ETH', "2020-01-01", "2023-12-21")
+
+print(backtesting_zscore(df,10,-0.5))
+
 
 #def walkforward_zscore(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
 
