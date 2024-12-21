@@ -9,6 +9,7 @@ import os
 from pprint import pprint
 import requests
 from typing import Optional
+import plotly_express as px
 
 # arbitrage account
 session = HTTP(
@@ -16,29 +17,57 @@ session = HTTP(
     api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
 )
 
-#rolling z-score model
-# window,z score threshold
+#rolling z-score model; param : window,z score threshold
 # need edit
 
-print(bybit_fundrate_fetcher('WIF', "2020-01-01", "2024-12-21"))
+#print(bybit_fundrate_fetcher('WIF', "2020-01-01", "2023-12-21"))
 
 
-def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
+def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
 
-    df['perp_pos'] = df['funding_rate'].rolling(window).apply(check_signs).shift(1).fillna(0)
-    df['perp_pos_t+1'] = df['perp_pos'].shift(-1)
-    df['trade'] = np.where(
-                    df['perp_pos_t+1'].isna() & df['perp_pos'].notna(), # if previous day is nan + today is not nan => we do two trades (long/short perp + short/long spot)
-                    2,
-                    np.where(
-                        df['perp_pos_t+1'].notna() & df['perp_pos'].notna(), # previous day and today are both not nan
-                        abs(df['perp_pos_t+1'] - df['perp_pos']) * 2, # check if pervious day and today have different positions
-                                                                      # e.g. if previous day is -1 & today is 0 => we do two trades as closing short perp + long spot positions
-                        np.nan # if previous day and today are both nan, trade is nan. This happens to days in initial window as we start rolling()
-                    )
-                )
+    df['funding_ma'] = df['funding_rate'].rolling(window).mean()
+    df['funding_sd'] = df['funding_rate'].rolling(window).std()
+    df['funding_z'] = (df['funding_rate'] - df['funding_ma']) / df['funding_sd']
 
-    df['pnl'] =  - (df['funding_rate'] * df['perp_pos']) - df['trade']*0.05/100
+    # Identify where funding_rate > funding_z over the rolling window
+    condition = df['funding_rate'].rolling(window).apply(lambda x: (x > df['funding_z']).all(), raw=False)
+
+    # Update positions using np.where
+    df['perp_pos'] = np.where(condition, -1, 0)  # Short perpetual futures
+    df['spot_pos'] = np.where(condition, 1, 0)   # Long spot to offset
+
+    # Maintain positions until funding_rate turns negative
+    df['perp_pos'] = np.where((df['funding_rate'] < 0) & (df['perp_pos'] == -1), 0, df['perp_pos'])
+    df['spot_pos'] = np.where((df['funding_rate'] < 0) & (df['spot_pos'] == 1), 0, df['spot_pos'])
+
+    # Forward-fill positions to maintain the state
+    df['perp_pos'] = df['perp_pos'].replace(0, np.nan).ffill().fillna(0)
+    df['spot_pos'] = df['spot_pos'].replace(0, np.nan).ffill().fillna(0)
+
+    # Calculate trades based on changes in positions
+    df['trade'] = abs(df['perp_pos'].diff().fillna(0)) + abs(df['spot_pos'].diff().fillna(0))
+
+    # Calculate PnL based on funding_rate collection logic
+    df['pnl'] = 0
+    summing = False
+    pnl_sum = 0
+
+    for i in range(len(df)):
+        if df['trade'].iloc[i] > 0:  # Deduct transaction cost when trades occur
+            pnl_sum -= df['trade'].iloc[i] * 0.05 / 100
+
+        if df['perp_pos'].iloc[i] == -1 and df['spot_pos'].iloc[i] == 1 and not summing:
+            # Start summing funding rates when positions are set
+            summing = True
+            pnl_sum = 0
+        if summing:
+            pnl_sum += df['funding_rate'].iloc[i]
+            df.loc[i, 'pnl'] = pnl_sum
+        if df['perp_pos'].iloc[i] == 0 and df['spot_pos'].iloc[i] == 0 and summing:
+            # Stop summing when positions revert to 0
+            summing = False
+
+    
     df['cumu'] = df['pnl'].cumsum()
     df['dd'] = df['cumu'].cummax() - df['cumu']
 
@@ -49,8 +78,8 @@ def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[p
     else:
         sharpe = np.nan
 
-    mdd = round(df['dd'].max(), 5)
-
+    mdd = round(df['dd'].max(), 3)
+    
     # avoid division of zero
     if mdd != 0:
         calmar = round(annual_return / mdd,2)
@@ -67,7 +96,7 @@ def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[p
 
 
 
-#def walkforward(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
+#def walkforward_zscore(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
 
 
 
