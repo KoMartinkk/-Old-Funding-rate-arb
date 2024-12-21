@@ -25,7 +25,6 @@ print(bybit_fundrate_fetcher('WIF', "2020-01-01", "2024-12-21"))
 
 def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
 
-
     df['perp_pos'] = df['funding_rate'].rolling(window).apply(check_signs).shift(1).fillna(0)
     df['perp_pos_t+1'] = df['perp_pos'].shift(-1)
     df['trade'] = np.where(
@@ -68,7 +67,14 @@ def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[p
 
 
 
+#def walkforward(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
 
+
+
+
+#print(backtesting())
+
+#other model
 
 
 
