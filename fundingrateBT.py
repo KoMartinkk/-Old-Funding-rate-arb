@@ -4,7 +4,7 @@ import time
 import pandas as pd
 import numpy as np
 import datetime
-from tools import check_signs, perp_names,tg_message, bybit_fundrate_fetcher,datetime_to_unix_converter
+from tools import check_signs, perp_names,tg_message, round_down, round_up, bybit_fundrate_fetcher,datetime_to_unix_converter, unix_to_datetime_converter, bybit_fundrate_fetchers
 import os
 from pprint import pprint
 import requests
@@ -16,14 +16,16 @@ session = HTTP(
     api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
 )
 
-
 #rolling z-score model
-
+# window,z score threshold
 # need edit
+
+print(bybit_fundrate_fetcher('WIF', "2020-01-01", "2024-12-21"))
+
 
 def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
 
-    df = df.copy()
+
     df['perp_pos'] = df['funding_rate'].rolling(window).apply(check_signs).shift(1).fillna(0)
     df['perp_pos_t+1'] = df['perp_pos'].shift(-1)
     df['trade'] = np.where(
@@ -63,8 +65,6 @@ def backtesting(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[p
       return
 
     return pd.Series([window, sharpe, calmar, annual_return, mdd],index= ['window', 'sharpe', 'calmar', 'annual_return', 'mdd'])
-
-
 
 
 
