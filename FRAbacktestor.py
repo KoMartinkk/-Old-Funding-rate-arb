@@ -17,8 +17,14 @@ session = HTTP(
     api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
 )
 
+#different param for different model
+# window = np.arange(5,60,5)
+# shortperp_threshold = np.arange(-2,2.2,0.2)
+
+
 #rolling z-score model; param : window,z score threshold
 def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
+
     # Convert 'funding_rate' to numeric, replacing non-numeric values with NaN, then fill NaN cells into 0
     df['funding_rate'] = pd.to_numeric(df['funding_rate'], errors='coerce')
     df['funding_rate'].fillna(0, inplace=True)
@@ -99,9 +105,10 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
       fig.show()
       return
 
-    return pd.Series([window, sharpe, calmar, annual_return, mdd],
-                     index= ['window', 'sharpe', 'calmar', 
+    return pd.Series([window,shortperp_threshold, sharpe, calmar, annual_return, mdd],
+                     index= ['window', 'short_perp_threshold','sharpe', 'calmar', 
                              'annual_return', 'mdd'])
+
 
 
 #rolling z-score walk forward
