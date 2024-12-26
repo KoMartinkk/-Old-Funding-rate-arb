@@ -3,6 +3,7 @@ from pybit.unified_trading import HTTP
 import pandas as pd
 import math
 from urllib.parse import quote_plus
+from datetime import datetime, timezone
 
 """"""""
 perp_names = [
@@ -123,8 +124,17 @@ def bybit_fundrate_fetcher(token: str, start: str, end: str) -> pd.DataFrame:
 
     return fund_rate
 
-# ============================================================================================================
-# ============================================================================================================
+def get_current_utc() -> str:
+    """
+    Get the current UTC time as a string in the format 'YYYY-MM-DD HH:MM:SS'.
+    """
+    # Get the current UTC time
+    now_utc = datetime.now(timezone.utc)
+    
+    # Format the UTC time as a string
+    utc_time_str = now_utc.strftime("%Y-%m-%d %H:%M:%S")
+    
+    return utc_time_str
 
 
 def bybit_fundrate_fetchers(tokens: list[str], start: str, end: str) -> dict[str, pd.DataFrame]:

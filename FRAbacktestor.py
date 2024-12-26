@@ -11,18 +11,13 @@ import requests
 from typing import Optional
 import plotly_express as px
 
-# arbitrage account
+# arbitrage account, need to change api key
 session = HTTP(
     api_key="ktDiLh7gzoyUw3nbdf",
     api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
 )
 
 #rolling z-score model; param : window,z score threshold
-# need edit
-
-#print(bybit_fundrate_fetcher('WIF', "2020-01-01", "2023-12-21"))
-
-
 def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
     # Convert 'funding_rate' to numeric, replacing non-numeric values with NaN, then fill NaN cells into 0
     df['funding_rate'] = pd.to_numeric(df['funding_rate'], errors='coerce')
@@ -36,19 +31,28 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     df['perp_pos'] = 0
     df['spot_pos'] = 0
 
-#bug at perp pos and spot pos, dk why many times even funding rate positive the pos turns to 0
-
     # Calculate perp_pos
     df['perp_pos'] = np.where(
-        (df['perp_pos'].shift(1) == -1) & (df['funding_rate'] >= 0),-1,np.where(df['funding_z'] > shortperp_threshold,-1,0)
+    (df['perp_pos'].shift(1) == -1) & (df['funding_rate'] >= 0),  # Maintain pos if previous was -1 and funding_rate >= 0
+    -1,
+    np.where(
+        (df['funding_z'] > shortperp_threshold) & (df['funding_rate'] >= 0 ),  # Open position if funding_z > threshold
+        -1,
+        0  # else, = 0    
+    )
     )
 
-    # Calculate spot_pos
+    #cal spot pos
     df['spot_pos'] = np.where(
-    (df['spot_pos'].shift(1) == 1) & (df['funding_rate'] >= 0),1,np.where(df['funding_z'] > shortperp_threshold,1,0)
+    (df['spot_pos'].shift(1) == 1) & (df['funding_rate'] >= 0),  # Maintain pos if previous was -1 and funding_rate >= 0
+    1,
+    np.where(
+        (df['funding_z'] > shortperp_threshold) & (df['funding_rate'] >= 0),  # Open position if funding_z > threshold
+        1,
+        0  # else, = 0
+    )
     )
 
- 
       # Calculate trade columns
     df['trade_perp'] = abs(df['perp_pos'].diff().fillna(0))  # Changes in perpetual futures position
     df['trade_spot'] = abs(df['spot_pos'].diff().fillna(0))  # Changes in spot position
@@ -60,19 +64,16 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     # Initialize PnL column
     df['pnl'] = 0.0
 
-    # possible bug at pnl calculation, if trade >0, if already have position, should also add the funding rate
-
     # Define the PnL calculation logic
     df['pnl'] = np.where(
-        df['trade'] > 0,  # If there is a change in position (trade occurred)
-        -df['transaction_cost'],  # Deduct transaction cost
+        df['trade'] > 0,  # If there is change in pos (trade occurred)
+        -df['transaction_cost']+ df['funding_rate'],  # - transaction cost + funding rate received
         np.where(
-            (df['perp_pos'] == -1) & (df['spot_pos'] == 1) & (df['trade'] == 0),  # Positions are active, no trade
+            (df['perp_pos'] == -1) & (df['spot_pos'] == 1) & (df['trade'] == 0),  # Positions active, no trade
             df['funding_rate'],  # Add corresponding funding rate
             0  # No change in position, PnL remains 0
         )
     )
-
     
     df['cumu'] = df['pnl'].cumsum()
     df['dd'] = df['cumu'].cummax() - df['cumu']
@@ -98,27 +99,21 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
       fig.show()
       return
 
-    return pd.Series([window, sharpe, calmar, annual_return, mdd],index= ['window', 'sharpe', 'calmar', 'annual_return', 'mdd'])
+    return pd.Series([window, sharpe, calmar, annual_return, mdd],
+                     index= ['window', 'sharpe', 'calmar', 
+                             'annual_return', 'mdd'])
 
 
-#testing (type error here, possibly some problem with a column when fetching data, unexpected data type existed)
-df=bybit_fundrate_fetcher('ETH', "2020-01-01", "2023-12-21")
-
-print(backtesting_zscore(df,10,-0.5))
-
-
+#rolling z-score walk forward
 #def walkforward_zscore(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
 
 
 
-
-#print(backtesting())
-
-#other model
+#other models
 
 
 
-
+#other model walk forward
 
 
 
