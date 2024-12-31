@@ -4,7 +4,7 @@ import time
 import pandas as pd
 import numpy as np
 import datetime
-from tools import check_signs, perp_names,tg_message, round_down, round_up, bybit_fundrate_fetcher,datetime_to_unix_converter, unix_to_datetime_converter, bybit_fundrate_fetchers, get_current_utc
+from tools import check_signs, perp_names, windows, shortperp_thresholds ,tg_message, round_down, round_up, bybit_fundrate_fetcher,datetime_to_unix_converter, unix_to_datetime_converter, bybit_fundrate_fetchers, get_current_utc
 import os
 from pprint import pprint
 import requests
@@ -12,6 +12,7 @@ from typing import Optional
 import plotly_express as px
 from FRAbacktestor import backtesting_zscore
 import warnings
+from tqdm import tqdm
 
 warnings.filterwarnings("ignore")  # Ignore warnings for cleaner output
 
@@ -26,7 +27,11 @@ TIME_FRAMES = {
             'until': get_current_utc()
         },}
 
+#loop 3 params, the for loop should be simpler than Glassnode
+# then, save csv of tokens that pass bt and wf base on token name
+# keep rows and csv with sharpe*calmar>4, >10% AR and low mdd 
 
+# different param for different model
 
 def main():
 
@@ -35,13 +40,14 @@ def main():
 
     # Iterate through each FRA tokens (e.g.:'WIF')
     for perp in perp_names:
-        factor_api_path = endpoint['path']  # API path for factor data
+        for window in windows:
+            for shortperp_threshold in shortperp_thresholds:
+
         factor_name = endpoint['name']  # Name of the factor
         factor_tokens = endpoint['assets']  # Associated tokens for the factor
-        resolutions = endpoint['resolutions']  # Available resolutions for the factor data
-
+        
         # Create a directory structure for storing results
-        factor_folder = os.path.join(based_location, f"results/{category}/{factor_name}")
+        perp_folder = os.path.join(based_location, f"results/{perp}")
         os.makedirs(factor_folder, exist_ok=True)
 
         # Process data for each resolution

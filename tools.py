@@ -1,9 +1,14 @@
 import requests
 from pybit.unified_trading import HTTP
 import pandas as pd
+import numpy as np
 import math
 from urllib.parse import quote_plus
 from datetime import datetime, timezone
+
+windows = np.arange(5,60,5)
+
+shortperp_thresholds = np.arange(0,2.2,0.2)
 
 """"""""
 perp_names = [

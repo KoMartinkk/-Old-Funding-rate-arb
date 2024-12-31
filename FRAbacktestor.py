@@ -17,11 +17,6 @@ session = HTTP(
     api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
 )
 
-#different param for different model
-# window = np.arange(5,60,5)
-# shortperp_threshold = np.arange(-2,2.2,0.2)
-
-
 #rolling z-score model; param : window,z score threshold
 def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
 
@@ -37,27 +32,24 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     df['perp_pos'] = 0
     df['spot_pos'] = 0
 
-    # Calculate perp_pos
-    df['perp_pos'] = np.where(
-    (df['perp_pos'].shift(1) == -1) & (df['funding_rate'] >= 0),  # Maintain pos if previous was -1 and funding_rate >= 0
-    -1,
-    np.where(
-        (df['funding_z'] > shortperp_threshold) & (df['funding_rate'] >= 0 ),  # Open position if funding_z > threshold
-        -1,
-        0  # else, = 0    
-    )
-    )
+    # Iterate through rows to propagate the perp position correctly
+    for i in range(1, len(df)):
+        if df.loc[i, 'funding_z'] > shortperp_threshold and df.loc[i, 'funding_rate'] >= 0:
+            df.loc[i, 'perp_pos'] = -1  # Open or maintain short position
+        elif df.loc[i - 1, 'perp_pos'] == -1 and df.loc[i, 'funding_rate'] >= 0:
+            df.loc[i, 'perp_pos'] = -1  # Continue short position
+        else:
+            df.loc[i, 'perp_pos'] = 0  # Close position
 
-    #cal spot pos
-    df['spot_pos'] = np.where(
-    (df['spot_pos'].shift(1) == 1) & (df['funding_rate'] >= 0),  # Maintain pos if previous was -1 and funding_rate >= 0
-    1,
-    np.where(
-        (df['funding_z'] > shortperp_threshold) & (df['funding_rate'] >= 0),  # Open position if funding_z > threshold
-        1,
-        0  # else, = 0
-    )
-    )
+
+    # Iterate through rows to propagate the spot position correctly
+    for i in range(1, len(df)):
+        if df.loc[i, 'funding_z'] > shortperp_threshold and df.loc[i, 'funding_rate'] >= 0:
+            df.loc[i, 'spot_pos'] = 1  # Open or maintain long position
+        elif df.loc[i - 1, 'spot_pos'] == 1 and df.loc[i, 'funding_rate'] >= 0:
+            df.loc[i, 'spot_pos'] = 1  # Continue long position
+        else:
+            df.loc[i, 'spot_pos'] = 0  # Close position
 
       # Calculate trade columns
     df['trade_perp'] = abs(df['perp_pos'].diff().fillna(0))  # Changes in perpetual futures position
