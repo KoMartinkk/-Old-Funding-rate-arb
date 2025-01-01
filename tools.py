@@ -141,7 +141,6 @@ def get_current_utc() -> str:
     
     return utc_time_str
 
-
 def bybit_fundrate_fetchers(tokens: list[str], start: str, end: str) -> dict[str, pd.DataFrame]:
 
     """

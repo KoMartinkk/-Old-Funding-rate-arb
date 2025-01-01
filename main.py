@@ -27,11 +27,24 @@ TIME_FRAMES = {
             'until': get_current_utc()
         },}
 
-#loop 3 params, the for loop should be simpler than Glassnode
-# then, save csv of tokens that pass bt and wf base on token name
-# keep rows and csv with sharpe*calmar>4, >10% AR and low mdd 
+# intro:
+    #loop 3 params, for loop should be simpler than Glassnode, then save csv of tokens that pass bt and wf base on token name
+    # keep rows and csv with sharpe*calmar>4, >10% AR and low mdd 
 
-# different param for different model
+    # different param for different model
+
+#when testing:
+# specify perp before program, e.g:
+# categories = ['defi'] 
+# beware of data type (string/float/int?)
+
+#backtest period (IS)
+bt_start= "2020-01-01 00:00:00"
+bt_end = "2024-06-01 00:00:00"
+
+#walk foward period (OOS) 
+wf_start= "2024-06-01 00:00:00"
+wf_end= get_current_utc()
 
 def main():
 
@@ -40,54 +53,27 @@ def main():
 
     # Iterate through each FRA tokens (e.g.:'WIF')
     for perp in perp_names:
+
+        funding_rate_data = {}  # Initialize a list to store backtesting results
+        # get funding rate data for each token in perp_name list
+        df = bybit_fundrate_fetcher(perp,bt_start,bt_end)
+        funding_rate_data[perp] = df
+
+        # need to find a way to take each dataframe out again from dict to use backtestor function
+        # find ways to call and loop the keys (token names) in funding_rate_data dictionary
+
         for window in windows:
             for shortperp_threshold in shortperp_thresholds:
+                
+                 # Create a directory structure for storing results
+                perp_folder = os.path.join(based_location, f"results/{perp}")
+                os.makedirs(perp_folder, exist_ok=True)
+                
+                # result = backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
 
-        factor_name = endpoint['name']  # Name of the factor
-        factor_tokens = endpoint['assets']  # Associated tokens for the factor
-        
-        # Create a directory structure for storing results
-        perp_folder = os.path.join(based_location, f"results/{perp}")
-        os.makedirs(factor_folder, exist_ok=True)
 
-        # Process data for each resolution
-        for resolution in resolutions:
-            resolution_folder = os.path.join(factor_folder, resolution)
-            os.makedirs(resolution_folder, exist_ok=True)
 
-            # Iterate through each token for the factor
-            for factor_token in factor_tokens:
-                result_file_path = os.path.join(resolution_folder, f"{factor_token}_{resolution}.csv")
-                log_file_path = os.path.join(resolution_folder, f"{factor_token}_{resolution}.log")
 
-                # Skip processing if results already exist
-                if os.path.exists(result_file_path) or os.path.exists(log_file_path):
-                    logging.info(f"Skipped: {factor_name} | {factor_token} | {resolution}")
-                    continue
-
-                results = []  # Initialize a list to store backtesting results
-
-                # Fetch factor data from the API
-                factor_res = get_data(
-                    api_path=factor_api_path,
-                    token=factor_token,
-                    resolution=resolution,
-                    since=utc_to_unix(TIME_FRAMES[resolution]['IS']['since']),
-                    until=utc_to_unix(TIME_FRAMES[resolution]['OOS']['until']),
-                    API_KEY=API_KEY
-                    )
-
-                # Skip processing if no data was returned
-                 if factor_res is None:
-                        continue
-
-                    # Convert factor data into a DataFrame
-                    factor_df = pd.read_json(StringIO(factor_res.text), convert_dates=['t'])
-
-                    # Extract in-sample (IS) and out-of-sample (OOS) data for the factor
-                    bt_factor_df = df_filter(df=factor_df, start_date=TIME_FRAMES[resolution]['IS']['since'],
-                                                until_date=TIME_FRAMES[resolution]['IS']['until'])
-                    
                     # Skip processing if there isn't enough factor data
                     if len(bt_factor_df) <= min_rows[resolution]:
                         continue
@@ -97,17 +83,7 @@ def main():
                     # Progress bar for price tokens
                     with tqdm(total=len(PRICE_TOKENS), 
                               desc=f"Processing Price Tokens ({factor_name} | {resolution} | {factor_token})") as pbar:
-                        # Iterate over each price token for backtesting
-                        for price_token in PRICE_TOKENS:
-                            # Fetch price data from the API
-                            price_res = get_data(
-                                api_path=PRICE_API_PATH,
-                                token=price_token,
-                                resolution=resolution,
-                                since=utc_to_unix(TIME_FRAMES[resolution]['IS']['since']),
-                                until=utc_to_unix(TIME_FRAMES[resolution]['OOS']['until']),
-                                API_KEY=API_KEY
-                            )
+                                         
 
                             # Convert price data into a DataFrame
                             price_df = pd.read_json(StringIO(price_res.text), convert_dates=['t'])
