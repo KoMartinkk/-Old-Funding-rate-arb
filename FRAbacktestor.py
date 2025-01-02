@@ -78,12 +78,21 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
 
     annual_return = round(df['pnl'].mean() * 3 * 365, 2)
 
+    if annual_return<0.1:
+        return None
+
     if df['pnl'].std() != 0:
         sharpe = round((df['pnl'].mean() / df['pnl'].std()) * np.sqrt(3 * 365), 2)
     else:
         sharpe = np.nan
 
+    if sharpe < 3 : # discard low sharpe 
+        return None
+    
     mdd = round(df['dd'].max(), 3)
+
+    if mdd > 0.25:
+        return None
     
     # avoid division of zero
     if mdd != 0:
