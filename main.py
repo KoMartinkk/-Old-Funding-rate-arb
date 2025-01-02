@@ -90,7 +90,7 @@ def main():
             else:
             # Log if no results were generated
                 with open(result_file_path, 'w') as f:
-                f.write(f"No results: {perp}\n")
+                    f.write(f"No results: {perp}\n")
                 logging.info(f"No results: {perp}")
 
             logging.info(f"Completed: {perp}")
