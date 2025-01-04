@@ -62,16 +62,36 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     # Initialize PnL column
     df['pnl'] = 0.0
 
-    # Define the PnL calculation logic
-    df['pnl'] = np.where(
-        df['trade'] > 0,  # If there is change in pos (trade occurred)
-        -df['transaction_cost']+ df['funding_rate'],  # - transaction cost + funding rate received
-        np.where(
-            (df['perp_pos'] == -1) & (df['spot_pos'] == 1) & (df['trade'] == 0),  # Positions active, no trade
-            df['funding_rate'],  # Add corresponding funding rate
-            0  # No change in position, PnL remains 0
-        )
-    )
+    # Define the PnL calculation logic 
+    for i in range(1, len(df)):  # Start from the second row (i = 1) since we're checking the previous row
+        trade = df.loc[i, 'trade']
+        transaction_cost = df.loc[i, 'transaction_cost']
+        funding_rate = df.loc[i, 'funding_rate']
+        
+        # Get positions from the previous row
+        prev_perp_pos = df.loc[i - 1, 'perp_pos']
+        prev_spot_pos = df.loc[i - 1, 'spot_pos']
+        
+        # Get positions from the current row
+        curr_perp_pos = df.loc[i, 'perp_pos']
+        curr_spot_pos = df.loc[i, 'spot_pos']
+        
+        # Case 1: Trade > 0, previous perp_pos = -1, previous spot_pos = 1
+        if trade > 0 and prev_perp_pos == -1 and prev_spot_pos == 1:
+            df.loc[i, 'pnl'] = -transaction_cost + funding_rate
+        
+        # Case 2: Trade > 0, previous perp_pos = 0, previous spot_pos = 0
+        elif trade > 0 and prev_perp_pos == 0 and prev_spot_pos == 0:
+            df.loc[i, 'pnl'] = -transaction_cost
+        
+        # Case 3: Trade = 0, previous perp_pos = -1, previous spot_pos = 1
+        elif trade == 0 and prev_perp_pos == -1 and prev_spot_pos == 1:
+            df.loc[i, 'pnl'] = funding_rate
+        
+        # Case 4: Trade = 0, current perp_pos = 0, current spot_pos = 0
+        elif trade == 0 and curr_perp_pos == 0 and curr_spot_pos == 0:
+            df.loc[i, 'pnl'] = 0  # Explicitly set PnL to 0 (can be omitted since default is 0)
+
     
     df['cumu'] = df['pnl'].cumsum()
     df['dd'] = df['cumu'].cummax() - df['cumu']
@@ -109,11 +129,11 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     return pd.Series([window,shortperp_threshold, sharpe, calmar, annual_return, mdd],
                      index= ['window', 'short_perp_threshold','sharpe', 'calmar', 
                              'annual_return', 'mdd'])
-
+# change dataframe time period = doing walk forward
 
 
 #rolling z-score walk forward
-#def walkforward_zscore(df: pd.DataFrame, window: int, plot: bool = False) -> Optional[pd.Series]:
+
 
 
 
@@ -121,7 +141,7 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
 
 
 
-#other model walk forward
+
 
 
 
