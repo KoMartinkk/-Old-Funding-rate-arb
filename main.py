@@ -33,7 +33,7 @@ TIME_FRAMES = {
 
 #when testing:
 # specify perp before program, e.g:
-# categories = ['defi'] 
+# for glassnode, categories = ['defi'] 
 # beware of data type (string/float/int?)
 
 #backtest period (IS)
