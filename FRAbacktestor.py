@@ -4,7 +4,7 @@ import time
 import pandas as pd
 import numpy as np
 import datetime
-from tools import check_signs, perp_names,tg_message, round_down, round_up, bybit_fundrate_fetcher,datetime_to_unix_converter, unix_to_datetime_converter, bybit_fundrate_fetchers
+from tools import check_signs,tg_message,perp_names, round_down, round_up, bybit_fundrate_fetcher,datetime_to_unix_converter, unix_to_datetime_converter, bybit_fundrate_fetchers
 import os
 from pprint import pprint
 import requests
@@ -40,7 +40,6 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
             df.loc[i, 'perp_pos'] = -1  # Continue short position
         else:
             df.loc[i, 'perp_pos'] = 0  # Close position
-
 
     # Iterate through rows to propagate the spot position correctly
     for i in range(1, len(df)):
@@ -111,7 +110,7 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     
     mdd = round(df['dd'].max(), 3)
 
-    if mdd > 0.25:
+    if mdd > 0.1:
         return None
     
     # avoid division of zero
@@ -135,6 +134,7 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
 #rolling z-score walk forward
 
 
+#def backtesting_model(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
 
 
 #other models
