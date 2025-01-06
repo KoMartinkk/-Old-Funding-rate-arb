@@ -9,7 +9,7 @@ import os
 from pprint import pprint
 import requests
 from typing import Optional
-import plotly_express as px
+import plotly.express as px
 
 # arbitrage account, need to change api key
 session = HTTP(
