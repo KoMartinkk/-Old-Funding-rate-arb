@@ -11,18 +11,8 @@ import requests
 from typing import Optional
 import plotly.express as px
 
-# arbitrage account, need to change api key
-session = HTTP(
-    api_key="ktDiLh7gzoyUw3nbdf",
-    api_secret="IVc62GgFgpF5bcQOCwsrZ8INGYlymtxV5h2v",
-)
-
 #rolling z-score model; param : window,z score threshold
 def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float , plot: bool = False) -> Optional[pd.Series]:
-
-    # Convert 'funding_rate' to numeric, replacing non-numeric values with NaN, then fill NaN cells into 0
-    df['funding_rate'] = pd.to_numeric(df['funding_rate'], errors='coerce')
-    df['funding_rate'].fillna(0, inplace=True)
 
     df['funding_ma'] = df['funding_rate'].rolling(window).mean()
     df['funding_sd'] = df['funding_rate'].rolling(window).std()
@@ -94,6 +84,8 @@ def backtesting_zscore(df: pd.DataFrame, window: int, shortperp_threshold: float
     
     df['cumu'] = df['pnl'].cumsum()
     df['dd'] = df['cumu'].cummax() - df['cumu']
+
+    return df
 
     annual_return = round(df['pnl'].mean() * 3 * 365, 2)
 

@@ -1,9 +1,9 @@
 import pandas as pd
+from pybit.unified_trading import HTTP
 from datetime import datetime
 from tools import datetime_to_unix_converter, unix_to_datetime_converter
 
 def bybit_fundrate_fetcher(token: str, start: str, end: str) -> pd.DataFrame:
-
     """
     Fetch historical funding rates for a token from the Bybit API.
 
@@ -29,10 +29,10 @@ def bybit_fundrate_fetcher(token: str, start: str, end: str) -> pd.DataFrame:
     while True:
         
         response = session.get_funding_rate_history(
-                    category = "linear",
-                    symbol = f"{token}USDT",
-                    startTime = start_unix,
-                    endTime = end_unix
+                    category="linear",
+                    symbol=f"{token}USDT",
+                    startTime=start_unix,
+                    endTime=end_unix
                     )
 
         result = response['result']['list']
@@ -50,7 +50,12 @@ def bybit_fundrate_fetcher(token: str, start: str, end: str) -> pd.DataFrame:
         else:
             break
     
-    fund_rate = pd.DataFrame(fund_rate, columns = ['datetime', 'funding_rate'])
+    # Create DataFrame
+    fund_rate = pd.DataFrame(fund_rate, columns=['datetime', 'funding_rate'])
+    
+    # Reverse the DataFrame and reset the index
     fund_rate = fund_rate.iloc[::-1].reset_index(drop=True)
+
+    fund_rate['funding_rate'] = fund_rate['funding_rate'].astype(float)
 
     return fund_rate
