@@ -8,7 +8,7 @@ from tools import check_signs, perp_names, windows, shortperp_thresholds ,tg_mes
 import os
 import requests
 from typing import Optional
-import plotly_express as px
+import plotly.express as px
 from FRAbacktestor import backtesting_zscore
 import warnings
 import logging
