@@ -38,9 +38,8 @@ def check_signs(window: int) -> int:
 # tg message
 def tg_message(message: str):
     """
-    frarb_bot
     """
-    base_url = 'https://api.telegram.org/bot7526783420:AAHVgjl_yYsuz3GGSsSrJ8UoCQn8OvhAY9M/sendMessage?chat_id=-4579402553&text='
+    base_url = 
     message = quote_plus(message) # special characters encoding
 
     requests.post(base_url + message)
